@@ -111,7 +111,13 @@ tracer-extension/
 ├── popup.html            # Extension popup UI
 ├── popup.js              # Popup functionality
 ├── storage.js            # IndexedDB wrapper
-├── cloudinary.js         # Cloudinary integration
+├── upload-manager.js     # Provider management
+├── upload-providers/     # Upload provider implementations
+│   ├── all-providers.js       # Single loader for all providers
+│   ├── base-provider.js       # Base provider interface
+│   ├── cloudinary-provider.js # Cloudinary provider
+│   ├── aws-s3-provider.js     # AWS S3 provider
+│   └── generic-http-provider.js # Generic HTTP provider
 ├── settings.html         # Settings page
 ├── settings.js           # Settings functionality
 ├── styles.css            # UI styling
@@ -274,7 +280,18 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 5. Test on different websites and SPAs
 
 ### Adding New Upload Providers
-Check our [GitHub repository](https://github.com/Digits-Designs-And-Brands/bug-tracer) for detailed instructions on adding new upload providers.
+
+The extension uses a centralized provider loading system. To add a new upload provider:
+
+1. **Create Provider File**: Add your provider in `upload-providers/your-provider.js`
+2. **Extend Base Class**: Your provider should extend `BaseUploadProvider`
+3. **Update Loader**: Add your provider to the `PROVIDER_FILES` array in `upload-providers/all-providers.js`
+4. **Register Provider**: Add your provider class to the `PROVIDER_CLASSES` array in the same file
+5. **Update Manager**: Register your provider in `upload-manager.js`
+
+The `all-providers.js` file automatically loads all providers in the correct order, so you only need to update that one file when adding new providers.
+
+Check our [GitHub repository](https://github.com/Digits-Designs-And-Brands/bug-tracer) for detailed instructions and examples.
 
 ## 📞 Support
 

@@ -47,7 +47,6 @@
     "popup.js",
     "storage.js",
     "upload-manager.js",
-    "cloudinary.js",
     "upload-providers/",
     "settings.html",
     "settings.js",
