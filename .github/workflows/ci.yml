@@ -176,34 +176,16 @@ jobs:
         name: bug-tracer-extension
         path: .
         
+    - name: Generate Release Notes
+      run: |
+        node scripts/generate-release-notes.js > release-notes.md
+        
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
         tag_name: v${{ github.run_number }}
         name: Bug Tracer v${{ github.run_number }}
-        body: |
-          ## Bug Tracer Chrome Extension
-          
-          ### What's New
-          - Multi-provider upload support
-          - Enhanced UI/UX
-          - Improved error handling
-          - Centralized provider loading system
-          
-          ### Installation
-          1. Download the `bug-tracer-extension.zip` file
-          2. Extract the zip file
-          3. Open Chrome and go to `chrome://extensions/`
-          4. Enable "Developer mode"
-          5. Click "Load unpacked" and select the extracted folder
-          
-          ### Features
-          - Screen recording with audio
-          - Console log capture
-          - Network request monitoring
-          - Multiple upload providers (Cloudinary, AWS S3, Generic HTTP)
-          - Local storage with IndexedDB
-          - Privacy-first design
+        body_path: release-notes.md
         files: bug-tracer-extension.zip
         draft: false
         prerelease: false
