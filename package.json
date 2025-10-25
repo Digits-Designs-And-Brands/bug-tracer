@@ -1,0 +1,70 @@
+{
+  "name": "bug-tracer",
+  "version": "1.0.0",
+  "description": "Professional bug reporting with screen recording, console logs, and network monitoring. Upload to Cloudinary, AWS S3, or custom endpoints.",
+  "main": "background.js",
+  "scripts": {
+    "build": "echo 'No build step required for Chrome extension'",
+    "lint": "eslint *.js upload-providers/*.js",
+    "test": "echo 'Tests not yet implemented'",
+    "package": "zip -r bug-tracer-extension.zip . -x '*.git*' 'node_modules/*' '*.md' 'package*.json' '.github/*'",
+    "validate": "node -e \"const manifest = JSON.parse(require('fs').readFileSync('manifest.json', 'utf8')); console.log('Manifest validation passed');\""
+  },
+  "keywords": [
+    "chrome-extension",
+    "bug-reporting",
+    "screen-recording",
+    "developer-tools",
+    "debugging",
+    "console-logs",
+    "network-monitoring",
+    "cloudinary",
+    "aws-s3",
+    "upload-providers"
+  ],
+  "author": "Bug Tracer Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Digits-Designs-And-Brands/bug-tracer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Digits-Designs-And-Brands/bug-tracer/issues"
+  },
+  "homepage": "https://github.com/Digits-Designs-And-Brands/bug-tracer#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.0.0"
+  },
+  "files": [
+    "manifest.json",
+    "background.js",
+    "content.js",
+    "injected.js",
+    "popup.html",
+    "popup.js",
+    "storage.js",
+    "upload-manager.js",
+    "cloudinary.js",
+    "upload-providers/",
+    "settings.html",
+    "settings.js",
+    "styles.css",
+    "icons/"
+  ],
+  "chrome-extension": {
+    "manifest-version": 3,
+    "permissions": [
+      "activeTab",
+      "storage",
+      "scripting",
+      "tabs",
+      "desktopCapture"
+    ],
+    "host-permissions": [
+      "<all_urls>"
+    ]
+  }
+}

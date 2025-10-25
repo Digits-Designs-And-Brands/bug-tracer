@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bug Tracer - Settings</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      width: 100%;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .settings-container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    .settings-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .settings-header h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    
+    .settings-header p {
+      color: #666;
+    }
+    
+    .settings-section {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #333;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: #333;
+    }
+    
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.2s ease;
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+    }
+    
+    .form-help {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+    
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #5a6fd8;
+    }
+    
+    .btn-secondary {
+      background: #f8f9fa;
+      color: #333;
+      border: 1px solid #ddd;
+    }
+    
+    .btn-secondary:hover {
+      background: #e9ecef;
+    }
+    
+    .btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .status-indicator {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    
+    .status-indicator.connected {
+      background: #4CAF50;
+    }
+    
+    .status-indicator.disconnected {
+      background: #f44336;
+    }
+    
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #667eea;
+      text-decoration: none;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    
+    .back-link:hover {
+      text-decoration: underline;
+    }
+    
+    .test-results {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    
+    .test-results.success {
+      background: #e8f5e8;
+      color: #2e7d32;
+      border: 1px solid #c8e6c9;
+    }
+    
+    .test-results.error {
+      background: #ffebee;
+      color: #c62828;
+      border: 1px solid #ffcdd2;
+    }
+  </style>
+</head>
+<body>
+  <div class="settings-container">
+    <a href="#" class="back-link" id="backLink">
+      ← Back to Extension
+    </a>
+    
+    <div class="settings-header">
+      <h1>🐛 Bug Tracer Settings</h1>
+      <p>Configure your Cloudinary account for uploading recordings</p>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-title">
+        <span class="status-indicator" id="statusIndicator"></span>
+        Upload Provider Configuration
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label" for="providerSelect">Upload Provider</label>
+        <select id="providerSelect" class="form-input">
+          <option value="">Select a provider...</option>
+        </select>
+        <div class="form-help">
+          Choose your preferred upload provider for sharing recordings
+        </div>
+      </div>
+
+      <form id="providerForm" style="display: none;">
+        <div id="providerFields"></div>
+        
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="testConnection">
+            Test Connection
+          </button>
+          <button type="submit" class="btn btn-primary" id="saveConfig">
+            Save Configuration
+          </button>
+        </div>
+      </form>
+
+      <div id="testResults" class="test-results" style="display: none;"></div>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-title">Help & Documentation</div>
+      <p style="margin-bottom: 16px;">
+        Bug Tracer supports multiple upload providers:
+      </p>
+      
+      <div style="margin-bottom: 20px;">
+        <h4>Cloudinary</h4>
+        <ol style="margin-left: 20px; line-height: 1.6;">
+          <li>Create a free account at <a href="https://cloudinary.com" target="_blank">cloudinary.com</a></li>
+          <li>Go to your Dashboard and copy your <strong>Cloud Name</strong></li>
+          <li>Go to Settings > Upload and create a new <strong>Upload Preset</strong></li>
+          <li>Set the preset to "Unsigned" for public uploads</li>
+        </ol>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <h4>AWS S3</h4>
+        <ol style="margin-left: 20px; line-height: 1.6;">
+          <li>Create an AWS account and S3 bucket</li>
+          <li>Create IAM user with S3 upload permissions</li>
+          <li>Get your Access Key ID and Secret Access Key</li>
+          <li>Configure CORS policy for your bucket</li>
+        </ol>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <h4>Generic HTTP</h4>
+        <ol style="margin-left: 20px; line-height: 1.6;">
+          <li>Set up your own upload endpoint</li>
+          <li>Ensure it accepts multipart/form-data</li>
+          <li>Configure authentication if needed</li>
+          <li>Test the endpoint with the connection test</li>
+        </ol>
+      </div>
+      
+      <div style="margin-top: 20px; padding: 12px; background: #f8f9fa; border-radius: 6px;">
+        <strong>Note:</strong> All recordings are stored locally first. Upload is optional and only used when you explicitly upload a recording.
+      </div>
+    </div>
+  </div>
+
+  <script src="upload-providers/base-provider.js"></script>
+  <script src="cloudinary.js"></script>
+  <script src="upload-providers/aws-s3-provider.js"></script>
+  <script src="upload-providers/generic-http-provider.js"></script>
+  <script src="upload-manager.js"></script>
+  <script src="settings.js"></script>
+</body>
+</html>

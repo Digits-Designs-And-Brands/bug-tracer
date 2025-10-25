@@ -1,0 +1,213 @@
+# Bug Tracer Chrome Extension
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Chrome Web Store](https://img.shields.io/badge/Chrome-Extension-brightgreen.svg)](https://chrome.google.com/webstore)
+[![GitHub release](https://img.shields.io/github/release/Digits-Designs-And-Brands/bug-tracer.svg)](https://github.com/Digits-Designs-And-Brands/bug-tracer/releases)
+
+A powerful Chrome extension for bug reporting with screen recording capabilities, similar to jam.dev. **Now with multi-provider upload support!**
+
+## ✨ Features
+
+- 🎥 **Screen Recording**: Capture screen and audio using MediaRecorder API
+- 📝 **Console Logs**: Automatically capture all console logs (log, error, warn, info, debug)
+- 🌐 **Network Requests**: Intercept and log all network requests (fetch, XHR) with request/response details
+- 💾 **Local Storage**: Store recordings locally using IndexedDB
+- ☁️ **Multi-Provider Upload**: Upload to Cloudinary, AWS S3, or any custom HTTP endpoint
+- ⚙️ **Flexible Settings**: Configure multiple upload providers
+- 🔒 **Privacy First**: All data stored locally by default
+
+## Installation
+
+1. **Load the Extension**:
+   - Open Chrome and go to `chrome://extensions/`
+   - Enable "Developer mode" in the top right
+   - Click "Load unpacked" and select this folder
+
+2. **Configure Upload Provider** (Optional):
+   - Click the extension icon and then "Settings"
+   - Choose from supported providers:
+     - **Cloudinary**: Free tier available, easy setup
+     - **AWS S3**: Enterprise-grade storage
+     - **Generic HTTP**: Use your own upload endpoint
+   - Follow the setup instructions for your chosen provider
+   - Test the connection and save
+
+## Usage
+
+### Recording a Bug
+
+1. **Start Recording**:
+   - Click the extension icon
+   - Click "Start Recording"
+   - Select the screen/tab you want to record
+   - Choose whether to include audio
+
+2. **Reproduce the Bug**:
+   - Navigate to the page with the issue
+   - Reproduce the bug steps
+   - All console logs and network requests are automatically captured
+
+3. **Stop Recording**:
+   - Click "Stop Recording" in the extension popup
+   - The recording is automatically saved locally
+
+### Managing Recordings
+
+- **View Recordings**: All recordings appear in the popup with metadata
+- **Upload to Cloudinary**: Click "Upload" to share recordings online
+- **Delete**: Remove recordings you no longer need
+
+## 📤 Supported Upload Providers
+
+### Cloudinary
+- **Free tier**: 25GB storage, 25GB bandwidth
+- **Easy setup**: Just need cloud name and upload preset
+- **Features**: Automatic video optimization, CDN delivery
+- **Setup**: [cloudinary.com](https://cloudinary.com)
+
+### AWS S3
+- **Enterprise-grade**: Scalable cloud storage
+- **Flexible**: Pay-as-you-use pricing
+- **Features**: High availability, global distribution
+- **Setup**: AWS account + S3 bucket + IAM credentials
+
+### Generic HTTP
+- **Custom endpoints**: Use your own upload service
+- **Flexible**: Support any HTTP-based upload API
+- **Features**: Custom authentication, custom headers
+- **Setup**: Any endpoint accepting multipart/form-data
+
+## 🤝 Contributing
+
+Bug Tracer is open source! We welcome contributions:
+
+- 🐛 **Bug reports**: Found an issue? Let us know!
+- ✨ **Feature requests**: Have an idea? We'd love to hear it!
+- 🔧 **Code contributions**: Submit pull requests
+- 📚 **Documentation**: Help improve our docs
+- 🧪 **Testing**: Help us test new features
+
+Please open an issue or submit a pull request on our [GitHub repository](https://github.com/Digits-Designs-And-Brands/bug-tracer).
+
+## Technical Details
+
+### Architecture
+
+- **Manifest V3**: Uses the latest Chrome extension format
+- **Service Worker**: Background script for coordinating recording
+- **Content Scripts**: Inject into web pages to capture data
+- **IndexedDB**: Local storage for large video files
+- **MediaRecorder API**: Screen recording with audio support
+- **Provider Pattern**: Extensible upload provider system
+
+### File Structure
+
+```
+tracer-extension/
+├── manifest.json          # Extension manifest
+├── background.js          # Service worker
+├── content.js            # Content script
+├── injected.js           # Page context script
+├── popup.html            # Extension popup UI
+├── popup.js              # Popup functionality
+├── storage.js            # IndexedDB wrapper
+├── cloudinary.js         # Cloudinary integration
+├── settings.html         # Settings page
+├── settings.js           # Settings functionality
+├── styles.css            # UI styling
+└── README.md             # This file
+```
+
+### Permissions
+
+- `activeTab`: Access current tab for recording
+- `storage`: Save settings and configuration
+- `scripting`: Inject scripts into pages
+- `tabs`: Manage tab information
+- `desktopCapture`: Capture screen content
+- `<all_urls>`: Access all websites for bug reporting
+
+## Development
+
+### Prerequisites
+
+- Chrome browser with developer mode enabled
+- Basic understanding of Chrome extensions
+
+### Local Development
+
+1. Make changes to the source files
+2. Go to `chrome://extensions/`
+3. Click the refresh icon on the extension
+4. Test your changes
+
+### Key Components
+
+- **BugTracerStorage**: Handles IndexedDB operations
+- **CloudinaryUploader**: Manages video uploads
+- **BugTracerPopup**: Main UI controller
+- **Background Service Worker**: Coordinates recording
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Recording not starting**:
+   - Check if you have the necessary permissions
+   - Ensure you're on a supported page (not chrome:// pages)
+
+2. **Upload failing**:
+   - Verify Cloudinary configuration
+   - Check your internet connection
+   - Ensure upload preset is set to "Unsigned"
+
+3. **Console logs not captured**:
+   - Refresh the page after installing the extension
+   - Check if the page has CSP restrictions
+
+### Browser Compatibility
+
+- Chrome 88+ (for Manifest V3 support)
+- Requires desktop capture permissions
+- Works on all websites except restricted pages
+
+## Security & Privacy
+
+- All recordings are stored locally by default
+- Cloudinary upload is optional and user-controlled
+- No data is sent to external servers without explicit user action
+- Console logs and network data are only captured during active recording
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🚀 Getting Started for Developers
+
+### Prerequisites
+- Chrome browser (version 88+)
+- Basic knowledge of JavaScript and Chrome extensions
+
+### Quick Start
+1. Clone the repository
+2. Load the extension in Chrome (Developer mode)
+3. Start recording bugs!
+
+### Adding New Upload Providers
+Check our [GitHub repository](https://github.com/Digits-Designs-And-Brands/bug-tracer) for detailed instructions on adding new upload providers.
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/Digits-Designs-And-Brands/bug-tracer/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Digits-Designs-And-Brands/bug-tracer/discussions)
+- **Documentation**: Check the code comments and this README
+
+## 🙏 Acknowledgments
+
+- Inspired by [jam.dev](https://jam.dev) and similar bug reporting tools
+- Built with modern web technologies and Chrome extension APIs
+- Community contributions and feedback
+
+---
+
+**Made with ❤️ for developers who want better bug reporting tools**

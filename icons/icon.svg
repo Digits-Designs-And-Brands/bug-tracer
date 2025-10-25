@@ -1,0 +1,34 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="64" cy="64" r="60" fill="#667eea" stroke="#5a6fd8" stroke-width="4"/>
+  
+  <!-- Bug icon -->
+  <g transform="translate(64, 64)">
+    <!-- Bug body -->
+    <ellipse cx="0" cy="0" rx="20" ry="12" fill="#fff"/>
+    
+    <!-- Bug head -->
+    <circle cx="0" cy="-8" r="8" fill="#fff"/>
+    
+    <!-- Antennae -->
+    <line x1="-6" y1="-12" x2="-8" y2="-18" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+    <line x1="6" y1="-12" x2="8" y2="-18" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+    
+    <!-- Eyes -->
+    <circle cx="-3" cy="-10" r="1.5" fill="#667eea"/>
+    <circle cx="3" cy="-10" r="1.5" fill="#667eea"/>
+    
+    <!-- Legs -->
+    <line x1="-15" y1="-5" x2="-22" y2="-2" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+    <line x1="-15" y1="0" x2="-22" y2="0" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+    <line x1="-15" y1="5" x2="-22" y2="2" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+    
+    <line x1="15" y1="-5" x2="22" y2="-2" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+    <line x1="15" y1="0" x2="22" y2="0" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+    <line x1="15" y1="5" x2="22" y2="2" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+    
+    <!-- Recording indicator -->
+    <circle cx="25" cy="-25" r="8" fill="#f44336"/>
+    <circle cx="25" cy="-25" r="4" fill="#fff"/>
+  </g>
+</svg>

@@ -1,0 +1,189 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-and-validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: |
+        npm install -g eslint
+        npm install -g @typescript-eslint/parser
+        npm install -g @typescript-eslint/eslint-plugin
+        
+    - name: Lint JavaScript files
+      run: |
+        eslint *.js upload-providers/*.js --format=json --output-file=eslint-report.json || true
+        
+    - name: Validate manifest.json
+      run: |
+        node -e "
+        const manifest = JSON.parse(require('fs').readFileSync('manifest.json', 'utf8'));
+        const requiredFields = ['manifest_version', 'name', 'version', 'permissions'];
+        const missing = requiredFields.filter(field => !manifest[field]);
+        if (missing.length > 0) {
+          console.error('Missing required fields:', missing);
+          process.exit(1);
+        }
+        console.log('Manifest validation passed');
+        "
+        
+    - name: Check file structure
+      run: |
+        required_files=(
+          "manifest.json"
+          "background.js"
+          "content.js"
+          "injected.js"
+          "popup.html"
+          "popup.js"
+          "storage.js"
+          "upload-manager.js"
+          "settings.html"
+          "settings.js"
+          "styles.css"
+        )
+        
+        for file in "${required_files[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "Missing required file: $file"
+            exit 1
+          fi
+        done
+        
+        echo "All required files present"
+        
+    - name: Upload lint results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: lint-results
+        path: eslint-report.json
+
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run security scan
+      run: |
+        # Check for common security issues
+        echo "Checking for hardcoded secrets..."
+        if grep -r "password\|secret\|key" --include="*.js" --include="*.json" . | grep -v "placeholder\|example\|your-"; then
+          echo "Potential hardcoded secrets found"
+          exit 1
+        fi
+        
+        echo "Checking for eval usage..."
+        if grep -r "eval(" --include="*.js" .; then
+          echo "eval() usage found - potential security risk"
+          exit 1
+        fi
+        
+        echo "Security scan passed"
+
+  build-extension:
+    runs-on: ubuntu-latest
+    needs: [lint-and-validate, security-scan]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Create extension package
+      run: |
+        # Create a clean build directory
+        mkdir -p build
+        
+        # Copy all necessary files
+        cp manifest.json build/
+        cp *.js build/
+        cp *.html build/
+        cp *.css build/
+        cp -r upload-providers build/
+        cp -r icons build/
+        
+        # Create zip file
+        cd build
+        zip -r ../bug-tracer-extension.zip .
+        cd ..
+        
+        echo "Extension package created: bug-tracer-extension.zip"
+        
+    - name: Upload extension package
+      uses: actions/upload-artifact@v4
+      with:
+        name: bug-tracer-extension
+        path: bug-tracer-extension.zip
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [build-extension]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download extension package
+      uses: actions/download-artifact@v4
+      with:
+        name: bug-tracer-extension
+        path: .
+        
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ github.run_number }}
+        release_name: Bug Tracer v${{ github.run_number }}
+        body: |
+          ## Bug Tracer Chrome Extension
+          
+          ### What's New
+          - Multi-provider upload support
+          - Enhanced UI/UX
+          - Improved error handling
+          
+          ### Installation
+          1. Download the `bug-tracer-extension.zip` file
+          2. Extract the zip file
+          3. Open Chrome and go to `chrome://extensions/`
+          4. Enable "Developer mode"
+          5. Click "Load unpacked" and select the extracted folder
+          
+          ### Features
+          - Screen recording with audio
+          - Console log capture
+          - Network request monitoring
+          - Multiple upload providers (Cloudinary, AWS S3, Generic HTTP)
+          - Local storage with IndexedDB
+        draft: false
+        prerelease: false
+        
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./bug-tracer-extension.zip
+        asset_name: bug-tracer-extension.zip
+        asset_content_type: application/zip

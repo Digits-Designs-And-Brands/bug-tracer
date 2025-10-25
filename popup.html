@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bug Tracer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="header">
+    <h1>🐛 Bug Tracer</h1>
+    <p>Internal bug reporting tool</p>
+  </div>
+
+  <div class="main-content">
+    <!-- Recording Controls -->
+    <div class="recording-controls">
+      <button id="recordButton" class="record-button start">
+        <span id="recordIcon">🔴</span>
+        <span id="recordText">Start Recording</span>
+      </button>
+      
+      <div id="recordingStatus" class="recording-status stopped" style="display: none;">
+        <span id="statusText">Ready to record</span>
+        <div id="recordingDuration" style="display: none;">
+          <span id="durationText">00:00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recordings List -->
+    <div class="recordings-section">
+      <div class="section-title">
+        <span>Recent Recordings</span>
+        <span id="recordingsCount">(0)</span>
+      </div>
+      
+      <div id="recordingsList" class="recordings-list">
+        <div id="emptyState" class="empty-state">
+          <div class="empty-state-icon">📹</div>
+          <div class="empty-state-text">No recordings yet</div>
+          <div class="empty-state-subtext">Start recording to capture bugs</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="settings-section">
+      <button id="settingsButton" class="settings-button">
+        <span>⚙️</span>
+        <span>Settings</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Notification Container -->
+  <div id="notificationContainer"></div>
+
+  <!-- Scripts -->
+  <script src="storage.js"></script>
+  <script src="upload-providers/base-provider.js"></script>
+  <script src="cloudinary.js"></script>
+  <script src="upload-providers/aws-s3-provider.js"></script>
+  <script src="upload-providers/generic-http-provider.js"></script>
+  <script src="upload-manager.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
