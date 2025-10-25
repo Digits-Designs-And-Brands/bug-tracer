@@ -23,6 +23,7 @@ rm -f build/package*.json
 rm -f build/.gitignore
 rm -f build/LICENSE
 rm -f build/CONTRIBUTING.md
+rm -f build/SECURITY.md
 
 # Create zip file
 echo "📦 Creating extension package..."

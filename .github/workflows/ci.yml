@@ -85,14 +85,28 @@ jobs:
       run: |
         # Check for common security issues
         echo "Checking for hardcoded secrets..."
-        if grep -r "password\|secret\|key" --include="*.js" --include="*.json" . | grep -v "placeholder\|example\|your-"; then
-          echo "Potential hardcoded secrets found"
+        
+        # Check for actual hardcoded API keys/tokens (common patterns)
+        if grep -r -E "(sk-[a-zA-Z0-9]{20,}|pk_[a-zA-Z0-9]{20,}|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{35})" --include="*.js" --include="*.json" .; then
+          echo "Potential hardcoded API keys found"
           exit 1
         fi
         
-        echo "Checking for eval usage..."
+        # Check for hardcoded passwords (long strings in quotes)
+        if grep -r -E "password[\s]*[:=][\s]*['\"][^'\"]{8,}['\"]" --include="*.js" --include="*.json" . | grep -v -E "(placeholder|example|your-|config\.|this\.)"; then
+          echo "Potential hardcoded passwords found"
+          exit 1
+        fi
+        
+        # Check for eval usage
         if grep -r "eval(" --include="*.js" .; then
           echo "eval() usage found - potential security risk"
+          exit 1
+        fi
+        
+        # Check for innerHTML with user input (XSS risk)
+        if grep -r -E "innerHTML[\s]*=[\s]*[^=].*\+" --include="*.js" .; then
+          echo "Potential XSS vulnerability with innerHTML"
           exit 1
         fi
         
