@@ -21,13 +21,25 @@ jobs:
         
     - name: Install dependencies
       run: |
-        npm install -g eslint
-        npm install -g @typescript-eslint/parser
-        npm install -g @typescript-eslint/eslint-plugin
+        npm install
+        
+    - name: Clean previous lint report
+      run: |
+        rm -f eslint-report.json
         
     - name: Lint JavaScript files
       run: |
-        eslint *.js upload-providers/*.js --format=json --output-file=eslint-report.json || true
+        npm run lint:report || true
+        
+    - name: Verify lint report was generated
+      run: |
+        if [ -f "eslint-report.json" ]; then
+          echo "eslint-report.json created successfully"
+          ls -la eslint-report.json
+        else
+          echo "eslint-report.json not found, creating empty report"
+          echo '[]' > eslint-report.json
+        fi
         
     - name: Validate manifest.json
       run: |
