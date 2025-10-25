@@ -193,6 +193,86 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 2. Load the extension in Chrome (Developer mode)
 3. Start recording bugs!
 
+## 🧪 Testing the Extension
+
+### 1. Load the Extension in Chrome
+1. Open Chrome and go to `chrome://extensions/`
+2. Enable "Developer mode" (toggle in top right)
+3. Click "Load unpacked"
+4. Select the `tracer-extension` folder
+5. The extension should appear in your extensions list with:
+   - Name: Bug Tracer
+   - Version: 1.0.0
+   - Status: Enabled
+
+### 2. Test the Extension Popup
+1. Click the Bug Tracer icon in Chrome toolbar
+2. You should see the popup with:
+   - ✅ "Start Recording" button
+   - ✅ "Recent Recordings" section (empty initially)
+   - ✅ "Settings" button
+3. Check for any console errors:
+   - Right-click the extension icon
+   - Select "Inspect popup"
+   - Check Console tab for errors
+
+### 3. Test Screen Recording
+1. Click "Start Recording" in the popup
+2. Chrome should ask for screen capture permission
+3. Select a screen/tab to record
+4. Choose whether to include audio
+5. The popup should show:
+   - ✅ "Stop Recording" button
+   - ✅ Recording status indicator
+   - ✅ Duration counter
+6. Navigate to any website and interact with it
+7. Click "Stop Recording"
+8. Check that recording appears in the list
+
+### 4. Test Data Capture
+1. Start a new recording
+2. Open a website with console logs (try opening DevTools and running `console.log("test")`)
+3. Make some network requests (refresh page, click links)
+4. Stop the recording
+5. Check that the recording includes:
+   - ✅ Video file
+   - ✅ Console logs
+   - ✅ Network requests
+   - ✅ Page metadata
+
+### 5. Test Upload Providers
+1. Click "Settings" in the popup
+2. Select a provider (Cloudinary, AWS S3, or Generic HTTP)
+3. Fill in the configuration fields
+4. Click "Test Connection"
+5. If successful, save the configuration
+6. Go back to recordings list
+7. Click "Upload" on a recording
+8. Verify upload progress and success
+
+### 6. Test Local Storage
+1. Create multiple recordings
+2. Check that they all appear in the list
+3. Try deleting a recording
+4. Verify it's removed from the list
+5. Check browser storage:
+   - Open DevTools → Application → IndexedDB
+   - Look for "BugTracerDB" database
+
+### 7. Debug Common Issues
+- **Extension not loading**: Check manifest.json syntax
+- **Recording not starting**: Check permissions in manifest
+- **Console errors**: Check popup console and background script console
+- **Upload failing**: Check provider configuration and network
+- **Data not captured**: Check if content script is injected properly
+
+### 8. Performance Testing
+1. Record a long session (5+ minutes)
+2. Check memory usage in Chrome Task Manager
+3. Test with large network responses
+4. Verify IndexedDB storage limits
+5. Test on different websites and SPAs
+
 ### Adding New Upload Providers
 Check our [GitHub repository](https://github.com/Digits-Designs-And-Brands/bug-tracer) for detailed instructions on adding new upload providers.
 
