@@ -6,6 +6,7 @@
   "scripts": {
     "build": "echo 'No build step required for Chrome extension'",
     "lint": "eslint *.js upload-providers/*.js",
+    "lint:report": "eslint *.js upload-providers/*.js --format json --output-file eslint-report.json",
     "test": "echo 'Tests not yet implemented'",
     "package": "zip -r bug-tracer-extension.zip . -x '*.git*' 'node_modules/*' '*.md' 'package*.json' '.github/*'",
     "validate": "node -e \"const manifest = JSON.parse(require('fs').readFileSync('manifest.json', 'utf8')); console.log('Manifest validation passed');\""

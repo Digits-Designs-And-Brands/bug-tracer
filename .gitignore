@@ -46,6 +46,9 @@ coverage/
 # ESLint cache
 .eslintcache
 
+# ESLint reports
+eslint-report.json
+
 # Optional npm cache directory
 .npm
 
