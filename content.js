@@ -14,6 +14,9 @@
 
   let isRecording = false;
   let injectedScriptReady = false;
+  let mediaRecorder = null;
+  let recordedChunks = [];
+  let recordingStartTime = null;
   let capturedData = {
     consoleLogs: [],
     networkRequests: []
@@ -32,6 +35,18 @@
   }
 
   /**
+   * Inject the floating widget script
+   */
+  function injectFloatingWidget() {
+    const script = document.createElement('script');
+    script.src = chrome.runtime.getURL('floating-widget.js');
+    script.onload = function() {
+      this.remove();
+    };
+    (document.head || document.documentElement).appendChild(script);
+  }
+
+  /**
    * Send message to background script
    */
   function sendToBackground(type, data) {
@@ -43,7 +58,7 @@
   }
 
   /**
-   * Handle messages from injected script
+   * Handle messages from injected script and floating widget
    */
   function handleInjectedMessage(event) {
     if (event.source !== window) return;
@@ -76,14 +91,141 @@
         break;
 
       case 'BUG_TRACER_STOP_RECORDING':
-        isRecording = false;
-        sendToBackground('RECORDING_DATA_CAPTURED', {
-          consoleLogs: event.data.data.consoleLogs,
-          networkRequests: event.data.data.networkRequests,
-          url: window.location.href,
-          timestamp: Date.now()
-        });
+        // Handle stop recording from floating widget
+        if (isRecording) {
+          stopScreenRecording();
+        }
         break;
+    }
+  }
+
+  /**
+   * Start screen recording
+   */
+  async function startScreenRecording(streamId) {
+    try {
+      // Get the media stream using the stream ID
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          mandatory: {
+            chromeMediaSource: 'desktop',
+            chromeMediaSourceId: streamId,
+            maxWidth: 1920,
+            maxHeight: 1080
+          }
+        },
+        audio: {
+          mandatory: {
+            chromeMediaSource: 'desktop',
+            chromeMediaSourceId: streamId
+          }
+        }
+      });
+
+      // Create MediaRecorder
+      mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'video/webm;codecs=vp9'
+      });
+
+      recordedChunks = [];
+      recordingStartTime = Date.now();
+
+      // Handle data available
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunks.push(event.data);
+        }
+      };
+
+      // Handle recording stop
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        const duration = Date.now() - recordingStartTime;
+        
+        // Save recording to storage
+        await saveRecording(blob, duration);
+        
+        // Clean up
+        stream.getTracks().forEach(track => track.stop());
+        recordedChunks = [];
+        mediaRecorder = null;
+        recordingStartTime = null;
+      };
+
+      // Start recording
+      mediaRecorder.start(1000); // Collect data every second
+      isRecording = true;
+
+      // Start capturing console/network data
+      startRecording();
+
+      // Show floating widget
+      if (window.bugTracerWidget) {
+        window.bugTracerWidget.updateStatus(true);
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to start screen recording:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Stop screen recording
+   */
+  async function stopScreenRecording() {
+    try {
+      if (!mediaRecorder || !isRecording) {
+        throw new Error('No active recording to stop');
+      }
+
+      // Stop MediaRecorder
+      mediaRecorder.stop();
+      isRecording = false;
+
+      // Stop capturing console/network data
+      stopRecording();
+
+      // Hide floating widget
+      if (window.bugTracerWidget) {
+        window.bugTracerWidget.updateStatus(false);
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to stop screen recording:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Save recording to storage
+   */
+  async function saveRecording(videoBlob, duration) {
+    try {
+      // Get captured data
+      const data = await getCapturedData();
+
+      const recordingData = {
+        videoBlob,
+        duration,
+        url: window.location.href,
+        title: document.title,
+        consoleLogs: data.consoleLogs || [],
+        networkRequests: data.networkRequests || []
+      };
+
+      // Send to background script for storage
+      chrome.runtime.sendMessage({
+        type: 'SAVE_RECORDING',
+        data: recordingData
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to save recording:', error);
+      return { success: false, error: error.message };
     }
   }
 
@@ -92,7 +234,26 @@
    */
   function startRecording() {
     if (!injectedScriptReady) {
-      console.warn('Bug Tracer: Injected script not ready');
+      console.warn('Bug Tracer: Injected script not ready, waiting...');
+      
+      // Wait for injected script to be ready (with timeout)
+      let attempts = 0;
+      const maxAttempts = 50; // 5 seconds max wait
+      
+      const checkReady = () => {
+        if (injectedScriptReady) {
+          window.postMessage({
+            type: 'BUG_TRACER_START'
+          }, '*');
+        } else if (attempts < maxAttempts) {
+          attempts++;
+          setTimeout(checkReady, 100);
+        } else {
+          console.error('Bug Tracer: Injected script failed to load within timeout');
+        }
+      };
+      
+      checkReady();
       return;
     }
 
@@ -150,6 +311,18 @@
    */
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     switch (message.type) {
+      case 'START_SCREEN_RECORDING':
+        startScreenRecording(message.streamId).then(response => {
+          sendResponse(response);
+        });
+        return true; // Keep message channel open for async response
+
+      case 'STOP_SCREEN_RECORDING':
+        stopScreenRecording().then(response => {
+          sendResponse(response);
+        });
+        return true; // Keep message channel open for async response
+
       case 'START_RECORDING':
         startRecording();
         sendResponse({ success: true });
@@ -187,16 +360,21 @@
   function initialize() {
     // Inject the script into page context
     injectScript();
+    
+    // Inject the floating widget
+    injectFloatingWidget();
 
     // Listen for messages from injected script
     window.addEventListener('message', handleInjectedMessage);
 
-    // Notify background script that content script is ready
-    sendToBackground('CONTENT_SCRIPT_READY', {
-      url: window.location.href,
-      title: document.title,
-      timestamp: Date.now()
-    });
+    // Wait a moment for scripts to load, then notify background script
+    setTimeout(() => {
+      sendToBackground('CONTENT_SCRIPT_READY', {
+        url: window.location.href,
+        title: document.title,
+        timestamp: Date.now()
+      });
+    }, 100);
 
     // Handle page navigation (for SPAs)
     let lastUrl = window.location.href;

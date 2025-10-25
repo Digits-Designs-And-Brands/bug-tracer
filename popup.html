@@ -7,50 +7,47 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="header">
-    <h1>🐛 Bug Tracer</h1>
-    <p>Internal bug reporting tool</p>
-  </div>
+  <div class="popup-container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-content">
+        <h1>🐛 Bug Tracer</h1>
+        <button id="settingsButton" class="settings-btn" title="Settings">
+          ⚙️
+        </button>
+      </div>
+    </div>
 
+  <!-- Main Content -->
   <div class="main-content">
-    <!-- Recording Controls -->
-    <div class="recording-controls">
+    <!-- Recording Section -->
+    <div class="recording-section">
       <button id="recordButton" class="record-button start">
         <span id="recordIcon">🔴</span>
-        <span id="recordText">Start Recording</span>
+        <span id="recordText">Start</span>
       </button>
       
-      <div id="recordingStatus" class="recording-status stopped" style="display: none;">
-        <span id="statusText">Ready to record</span>
-        <div id="recordingDuration" style="display: none;">
-          <span id="durationText">00:00</span>
-        </div>
+      <div id="recordingStatus" class="recording-status">
+        <span id="statusText">Ready</span>
+        <span id="durationText" class="duration" style="display: none;">00:00</span>
       </div>
     </div>
 
     <!-- Recordings List -->
     <div class="recordings-section">
-      <div class="section-title">
-        <span>Recent Recordings</span>
-        <span id="recordingsCount">(0)</span>
+      <div class="section-header">
+        <h3>Recent</h3>
+        <span id="recordingsCount" class="count">0</span>
       </div>
       
       <div id="recordingsList" class="recordings-list">
         <div id="emptyState" class="empty-state">
-          <div class="empty-state-icon">📹</div>
-          <div class="empty-state-text">No recordings yet</div>
-          <div class="empty-state-subtext">Start recording to capture bugs</div>
+          <div class="empty-icon">📹</div>
+          <p>None</p>
         </div>
       </div>
     </div>
-
-    <!-- Settings -->
-    <div class="settings-section">
-      <button id="settingsButton" class="settings-button">
-        <span>⚙️</span>
-        <span>Settings</span>
-      </button>
-    </div>
+  </div>
   </div>
 
   <!-- Notification Container -->

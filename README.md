@@ -9,6 +9,7 @@ A powerful Chrome extension for bug reporting with screen recording capabilities
 ## ✨ Features
 
 - 🎥 **Screen Recording**: Capture screen and audio using MediaRecorder API
+- 🎯 **Floating Widget**: Loom-style floating recording interface on the page
 - 📝 **Console Logs**: Automatically capture all console logs (log, error, warn, info, debug)
 - 🌐 **Network Requests**: Intercept and log all network requests (fetch, XHR) with request/response details
 - 💾 **Local Storage**: Store recordings locally using IndexedDB
@@ -46,16 +47,29 @@ A powerful Chrome extension for bug reporting with screen recording capabilities
    - Navigate to the page with the issue
    - Reproduce the bug steps
    - All console logs and network requests are automatically captured
+   - A floating widget appears on the page showing recording status
 
 3. **Stop Recording**:
-   - Click "Stop Recording" in the extension popup
+   - Click "Stop Recording" in the extension popup OR
+   - Click "Stop" in the floating widget on the page
    - The recording is automatically saved locally
 
 ### Managing Recordings
 
 - **View Recordings**: All recordings appear in the popup with metadata
-- **Upload to Cloudinary**: Click "Upload" to share recordings online
+- **Detailed Analysis**: Click "View" to see comprehensive recording analysis
+- **Upload to Cloud**: Click "Upload" to share recordings online
 - **Delete**: Remove recordings you no longer need
+
+### Recording Analysis Page
+
+When you click "View" on a recording, you'll see a comprehensive analysis page with:
+
+- **📋 Recording Information**: Title, URL, duration, date, file size
+- **🎬 Video Player**: Full-screen video playback with custom controls
+- **📊 Console Logs**: All captured console messages (log, error, warn, info, debug)
+- **🌐 Network Requests**: Complete request/response details with headers and bodies
+- **🚀 Actions**: Download, upload, share, or start new recording
 
 ## 📤 Supported Upload Providers
 
@@ -108,8 +122,11 @@ tracer-extension/
 ├── background.js          # Service worker
 ├── content.js            # Content script
 ├── injected.js           # Page context script
+├── floating-widget.js    # Loom-style floating recording widget
 ├── popup.html            # Extension popup UI
 ├── popup.js              # Popup functionality
+├── results.html          # Recording analysis page
+├── results.js            # Results page functionality
 ├── storage.js            # IndexedDB wrapper
 ├── upload-manager.js     # Provider management
 ├── upload-providers/     # Upload provider implementations

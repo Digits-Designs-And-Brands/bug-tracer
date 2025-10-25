@@ -29,7 +29,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["injected.js"],
+      "resources": ["injected.js", "floating-widget.js", "results.html", "results.js"],
       "matches": ["<all_urls>"]
     }
   ],

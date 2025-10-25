@@ -32,53 +32,71 @@ async function startScreenRecording() {
       throw new Error('No active tab found');
     }
 
-    // Request screen capture
-    const stream = await navigator.mediaDevices.getDisplayMedia({
-      video: {
-        mediaSource: 'screen',
-        width: { ideal: 1920 },
-        height: { ideal: 1080 }
-      },
-      audio: true // Include system audio if available
+    // Request desktop capture permission
+    const streamId = await new Promise((resolve, reject) => {
+      chrome.desktopCapture.chooseDesktopMedia(
+        ['screen', 'window', 'tab'],
+        tab,
+        (streamId) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+          } else if (!streamId) {
+            reject(new Error('User cancelled screen capture'));
+          } else {
+            resolve(streamId);
+          }
+        }
+      );
     });
 
-    // Create MediaRecorder
-    mediaRecorder = new MediaRecorder(stream, {
-      mimeType: 'video/webm;codecs=vp9'
-    });
+    // Ensure content script is injected and ready
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ['content.js']
+      });
+    } catch (error) {
+      console.log('Content script already injected or failed to inject:', error);
+    }
 
-    recordedChunks = [];
-    recordingStartTime = Date.now();
-
-    // Handle data available
-    mediaRecorder.ondataavailable = (event) => {
-      if (event.data.size > 0) {
-        recordedChunks.push(event.data);
+    // Wait for content script to be ready
+    let contentScriptReady = false;
+    let attempts = 0;
+    const maxAttempts = 50; // 5 seconds max wait
+    
+    while (!contentScriptReady && attempts < maxAttempts) {
+      try {
+        const pingResponse = await chrome.tabs.sendMessage(tab.id, { type: 'PING' });
+        if (pingResponse && pingResponse.ready) {
+          contentScriptReady = true;
+        }
+      } catch (error) {
+        // Content script not ready yet
       }
-    };
-
-    // Handle recording stop
-    mediaRecorder.onstop = async () => {
-      const blob = new Blob(recordedChunks, { type: 'video/webm' });
-      const duration = Date.now() - recordingStartTime;
       
-      // Save recording to storage
-      await saveRecording(blob, duration, tab);
-      
-      // Clean up
-      stream.getTracks().forEach(track => track.stop());
-      recordedChunks = [];
-      mediaRecorder = null;
-      recordingStartTime = null;
-    };
+      if (!contentScriptReady) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
+    }
 
-    // Start recording
-    mediaRecorder.start(1000); // Collect data every second
-    isRecording = true;
-    currentTabId = tab.id;
+    if (!contentScriptReady) {
+      throw new Error('Content script not ready after waiting');
+    }
 
-    // Notify content script to start capturing console/network data
-    await chrome.tabs.sendMessage(tab.id, { type: 'START_RECORDING' });
+    // Send the stream ID to the content script to handle recording
+    const response = await chrome.tabs.sendMessage(tab.id, { 
+      type: 'START_SCREEN_RECORDING',
+      streamId: streamId
+    });
+
+    if (response && response.success) {
+      isRecording = true;
+      currentTabId = tab.id;
+      recordingStartTime = Date.now();
+    } else {
+      throw new Error(response?.error || 'Failed to start recording in content script');
+    }
 
     return { success: true, tabId: tab.id };
   } catch (error) {
@@ -92,17 +110,21 @@ async function startScreenRecording() {
  */
 async function stopScreenRecording() {
   try {
-    if (!mediaRecorder || !isRecording) {
+    if (!isRecording) {
       throw new Error('No active recording to stop');
     }
 
-    // Stop MediaRecorder
-    mediaRecorder.stop();
-    isRecording = false;
-
-    // Notify content script to stop capturing data
+    // Notify content script to stop recording
     if (currentTabId) {
-      await chrome.tabs.sendMessage(currentTabId, { type: 'STOP_RECORDING' });
+      const response = await chrome.tabs.sendMessage(currentTabId, { type: 'STOP_SCREEN_RECORDING' });
+      if (response && response.success) {
+        isRecording = false;
+        currentTabId = null;
+        recordingStartTime = null;
+        return { success: true };
+      } else {
+        throw new Error(response?.error || 'Failed to stop recording in content script');
+      }
     }
 
     return { success: true };
@@ -188,6 +210,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     case 'PAGE_NAVIGATED':
       console.log('Page navigated:', message.data.url);
+      break;
+
+    case 'SAVE_RECORDING':
+      // Forward the recording data to the popup script for storage
+      console.log('Recording saved:', message.data);
+      sendResponse({ success: true });
       break;
 
     case 'PING':

@@ -5,16 +5,24 @@
 
 class BugTracerPopup {
   constructor() {
-    this.storage = new BugTracerStorage();
-    this.uploadManager = new UploadManager();
-    this.isRecording = false;
-    this.recordings = [];
-    this.recordingInterval = null;
-    
-    this.initializeElements();
-    this.setupEventListeners();
-    this.loadRecordings();
-    this.updateRecordingStatus();
+    console.log('Bug Tracer popup: Constructor called');
+    try {
+      this.storage = new BugTracerStorage();
+      this.uploadManager = new UploadManager();
+      this.isRecording = false;
+      this.recordings = [];
+      this.recordingInterval = null;
+      
+      this.initializeElements();
+      this.setupEventListeners();
+      this.loadRecordings();
+      // Initialize recording status first
+      this.initializeRecordingStatus();
+      console.log('Bug Tracer popup: Constructor completed successfully');
+    } catch (error) {
+      console.error('Bug Tracer popup: Constructor failed:', error);
+      throw error;
+    }
   }
 
   /**
@@ -107,6 +115,17 @@ class BugTracerPopup {
    */
   async stopRecording() {
     try {
+      // First check if we're actually recording
+      const status = await chrome.runtime.sendMessage({ type: 'GET_RECORDING_STATUS' });
+      if (!status.isRecording) {
+        // We're not actually recording, just update the UI
+        this.isRecording = false;
+        this.updateUI();
+        this.stopDurationTimer();
+        this.showNotification('No active recording to stop', 'info');
+        return;
+      }
+
       const response = await chrome.runtime.sendMessage({ type: 'STOP_RECORDING' });
       
       if (response.success) {
@@ -120,6 +139,10 @@ class BugTracerPopup {
         throw new Error(response.error || 'Failed to stop recording');
       }
     } catch (error) {
+      // If there's an error, reset the UI state
+      this.isRecording = false;
+      this.updateUI();
+      this.stopDurationTimer();
       throw new Error('Failed to stop recording: ' + error.message);
     }
   }
@@ -189,7 +212,7 @@ class BugTracerPopup {
     const date = new Date(recording.timestamp).toLocaleString();
 
     element.innerHTML = `
-      <div class="recording-info">
+      <div class="recording-info" onclick="popup.viewRecording(${recording.id})" style="cursor: pointer;">
         <div class="recording-title">${this.escapeHtml(recording.title)}</div>
         <div class="recording-meta">
           <span>📅 ${date}</span>
@@ -200,6 +223,9 @@ class BugTracerPopup {
         </div>
       </div>
       <div class="recording-actions">
+        <button class="action-button view" onclick="popup.viewRecording(${recording.id})">
+          View
+        </button>
         ${!recording.uploaded ? `
           <button class="action-button upload" onclick="popup.uploadRecording(${recording.id})">
             Upload
@@ -212,6 +238,14 @@ class BugTracerPopup {
     `;
 
     return element;
+  }
+
+  /**
+   * View recording in results page
+   */
+  viewRecording(recordingId) {
+    const resultsUrl = chrome.runtime.getURL(`results.html?id=${recordingId}`);
+    chrome.tabs.create({ url: resultsUrl });
   }
 
   /**
@@ -287,6 +321,27 @@ class BugTracerPopup {
   }
 
   /**
+   * Initialize recording status on popup open
+   */
+  async initializeRecordingStatus() {
+    try {
+      const status = await chrome.runtime.sendMessage({ type: 'GET_RECORDING_STATUS' });
+      this.updateRecordingStatus(status);
+      
+      // Set up periodic status checks to keep popup in sync
+      this.statusCheckInterval = setInterval(() => {
+        this.updateRecordingStatus();
+      }, 2000); // Check every 2 seconds
+      
+    } catch (error) {
+      console.error('Failed to initialize recording status:', error);
+      // Default to not recording if we can't get status
+      this.isRecording = false;
+      this.updateUI();
+    }
+  }
+
+  /**
    * Update recording status
    */
   async updateRecordingStatus(status = null) {
@@ -316,17 +371,15 @@ class BugTracerPopup {
     if (this.isRecording) {
       this.recordButton.className = 'record-button stop';
       this.recordIcon.textContent = '⏹️';
-      this.recordText.textContent = 'Stop Recording';
-      this.recordingStatus.className = 'recording-status recording';
-      this.statusText.textContent = 'Recording in progress...';
-      this.recordingDuration.style.display = 'block';
+      this.recordText.textContent = 'Stop';
+      this.statusText.textContent = 'Recording...';
+      this.durationText.style.display = 'inline';
     } else {
       this.recordButton.className = 'record-button start';
       this.recordIcon.textContent = '🔴';
-      this.recordText.textContent = 'Start Recording';
-      this.recordingStatus.className = 'recording-status stopped';
-      this.statusText.textContent = 'Ready to record';
-      this.recordingDuration.style.display = 'none';
+      this.recordText.textContent = 'Start';
+      this.statusText.textContent = 'Ready';
+      this.durationText.style.display = 'none';
     }
   }
 
@@ -350,6 +403,17 @@ class BugTracerPopup {
     if (this.recordingInterval) {
       clearInterval(this.recordingInterval);
       this.recordingInterval = null;
+    }
+  }
+
+  /**
+   * Cleanup intervals when popup is closed
+   */
+  cleanup() {
+    this.stopDurationTimer();
+    if (this.statusCheckInterval) {
+      clearInterval(this.statusCheckInterval);
+      this.statusCheckInterval = null;
     }
   }
 
@@ -419,5 +483,18 @@ class BugTracerPopup {
 
 // Initialize popup when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  window.popup = new BugTracerPopup();
+  console.log('Bug Tracer popup: DOM loaded, initializing...');
+  try {
+    window.popup = new BugTracerPopup();
+    console.log('Bug Tracer popup: Initialized successfully');
+  } catch (error) {
+    console.error('Bug Tracer popup: Initialization failed:', error);
+  }
+});
+
+// Cleanup when popup is closed
+window.addEventListener('beforeunload', () => {
+  if (window.popup) {
+    window.popup.cleanup();
+  }
 });
