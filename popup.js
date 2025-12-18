@@ -181,8 +181,8 @@ class BugTracerPopup {
    * Render recordings list
    */
   renderRecordings() {
-    this.recordingsCount.textContent = `(${this.recordings.length})`;
-    
+    this.recordingsCount.textContent = this.recordings.length;
+
     if (this.recordings.length === 0) {
       this.emptyState.style.display = 'block';
       this.recordingsList.innerHTML = '';
@@ -211,31 +211,87 @@ class BugTracerPopup {
     const size = this.formatFileSize(recording.size);
     const date = new Date(recording.timestamp).toLocaleString();
 
-    element.innerHTML = `
-      <div class="recording-info" onclick="popup.viewRecording(${recording.id})" style="cursor: pointer;">
-        <div class="recording-title">${this.escapeHtml(recording.title)}</div>
-        <div class="recording-meta">
-          <span>📅 ${date}</span>
-          <span>⏱️ ${duration}</span>
-          <span>💾 ${size}</span>
-          <span>🌐 ${this.getDomainFromUrl(recording.url)}</span>
-          ${recording.uploaded ? '<span>☁️ Uploaded</span>' : ''}
-        </div>
-      </div>
-      <div class="recording-actions">
-        <button class="action-button view" onclick="popup.viewRecording(${recording.id})">
-          View
-        </button>
-        ${!recording.uploaded ? `
-          <button class="action-button upload" onclick="popup.uploadRecording(${recording.id})">
-            Upload
-          </button>
-        ` : ''}
-        <button class="action-button delete" onclick="popup.deleteRecording(${recording.id})">
-          Delete
-        </button>
-      </div>
-    `;
+    // Create recording info section
+    const recordingInfo = document.createElement('div');
+    recordingInfo.className = 'recording-info';
+    recordingInfo.style.cursor = 'pointer';
+    recordingInfo.addEventListener('click', () => this.viewRecording(recording.id));
+
+    // Create title
+    const recordingTitle = document.createElement('div');
+    recordingTitle.className = 'recording-title';
+    recordingTitle.textContent = recording.title;
+
+    // Create meta section
+    const recordingMeta = document.createElement('div');
+    recordingMeta.className = 'recording-meta';
+
+    const dateSpan = document.createElement('span');
+    dateSpan.textContent = `📅 ${date}`;
+
+    const durationSpan = document.createElement('span');
+    durationSpan.textContent = `⏱️ ${duration}`;
+
+    const sizeSpan = document.createElement('span');
+    sizeSpan.textContent = `💾 ${size}`;
+
+    const domainSpan = document.createElement('span');
+    domainSpan.textContent = `🌐 ${this.getDomainFromUrl(recording.url)}`;
+
+    recordingMeta.appendChild(dateSpan);
+    recordingMeta.appendChild(durationSpan);
+    recordingMeta.appendChild(sizeSpan);
+    recordingMeta.appendChild(domainSpan);
+
+    if (recording.uploaded) {
+      const uploadedSpan = document.createElement('span');
+      uploadedSpan.textContent = '☁️ Uploaded';
+      recordingMeta.appendChild(uploadedSpan);
+    }
+
+    recordingInfo.appendChild(recordingTitle);
+    recordingInfo.appendChild(recordingMeta);
+
+    // Create actions section
+    const recordingActions = document.createElement('div');
+    recordingActions.className = 'recording-actions';
+
+    // View button
+    const viewButton = document.createElement('button');
+    viewButton.className = 'action-button view';
+    viewButton.textContent = 'View';
+    viewButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.viewRecording(recording.id);
+    });
+
+    // Upload button (only if not uploaded)
+    if (!recording.uploaded) {
+      const uploadButton = document.createElement('button');
+      uploadButton.className = 'action-button upload';
+      uploadButton.textContent = 'Upload';
+      uploadButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.uploadRecording(recording.id);
+      });
+      recordingActions.appendChild(uploadButton);
+    }
+
+    // Delete button
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'action-button delete';
+    deleteButton.textContent = 'Delete';
+    deleteButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.deleteRecording(recording.id);
+    });
+
+    recordingActions.appendChild(viewButton);
+    recordingActions.appendChild(deleteButton);
+
+    // Assemble the element
+    element.appendChild(recordingInfo);
+    element.appendChild(recordingActions);
 
     return element;
   }

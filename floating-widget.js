@@ -20,81 +20,70 @@ class FloatingRecordingWidget {
     this.widget = document.createElement('div');
     this.widget.id = 'bug-tracer-floating-widget';
     this.widget.className = 'bug-tracer-widget';
-    
-    // Create widget content using DOM methods (Trusted Types safe)
-    const content = document.createElement('div');
-    content.className = 'bug-tracer-widget-content';
-    
-    // Create header
-    const header = document.createElement('div');
-    header.className = 'bug-tracer-widget-header';
-    
-    const icon = document.createElement('div');
-    icon.className = 'bug-tracer-widget-icon';
-    icon.textContent = '🎥';
-    
-    const title = document.createElement('div');
-    title.className = 'bug-tracer-widget-title';
-    title.textContent = 'Bug Tracer';
-    
-    const closeBtn = document.createElement('div');
-    closeBtn.className = 'bug-tracer-widget-close';
-    closeBtn.textContent = '×';
-    closeBtn.addEventListener('click', () => this.hide());
-    
-    header.appendChild(icon);
-    header.appendChild(title);
-    header.appendChild(closeBtn);
-    
-    // Create body
-    const body = document.createElement('div');
-    body.className = 'bug-tracer-widget-body';
-    
-    // Create status
-    const status = document.createElement('div');
-    status.className = 'bug-tracer-widget-status';
-    
-    const dot = document.createElement('div');
-    dot.className = 'bug-tracer-widget-dot';
-    
+
+    // Create compact bubble (default view)
+    const bubble = document.createElement('div');
+    bubble.className = 'bug-tracer-bubble';
+
+    const bubbleIcon = document.createElement('div');
+    bubbleIcon.className = 'bug-tracer-bubble-icon';
+    bubbleIcon.textContent = '🎥';
+
+    const bubbleDuration = document.createElement('div');
+    bubbleDuration.className = 'bug-tracer-bubble-duration';
+    bubbleDuration.textContent = '00:00';
+
+    bubble.appendChild(bubbleIcon);
+    bubble.appendChild(bubbleDuration);
+
+    // Create expanded controls (shown on hover)
+    const controls = document.createElement('div');
+    controls.className = 'bug-tracer-controls';
+
+    const controlsHeader = document.createElement('div');
+    controlsHeader.className = 'bug-tracer-controls-header';
+
+    const recordingIndicator = document.createElement('div');
+    recordingIndicator.className = 'bug-tracer-recording-indicator';
+
+    const redDot = document.createElement('span');
+    redDot.className = 'bug-tracer-red-dot';
+
     const statusText = document.createElement('span');
-    statusText.className = 'bug-tracer-widget-text';
-    statusText.textContent = 'Recording...';
-    
-    status.appendChild(dot);
-    status.appendChild(statusText);
-    
-    // Create duration
-    const duration = document.createElement('div');
-    duration.className = 'bug-tracer-widget-duration';
-    duration.textContent = '00:00';
-    
-    // Create actions
-    const actions = document.createElement('div');
-    actions.className = 'bug-tracer-widget-actions';
-    
+    statusText.textContent = 'Recording';
+
+    recordingIndicator.appendChild(redDot);
+    recordingIndicator.appendChild(statusText);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'bug-tracer-close-btn';
+    closeBtn.textContent = '×';
+    closeBtn.setAttribute('aria-label', 'Close widget');
+    closeBtn.addEventListener('click', () => this.hide());
+
+    controlsHeader.appendChild(recordingIndicator);
+    controlsHeader.appendChild(closeBtn);
+
+    const controlsDuration = document.createElement('div');
+    controlsDuration.className = 'bug-tracer-controls-duration';
+    controlsDuration.textContent = '00:00';
+
+    const controlsActions = document.createElement('div');
+    controlsActions.className = 'bug-tracer-controls-actions';
+
     const stopBtn = document.createElement('button');
-    stopBtn.className = 'bug-tracer-widget-btn bug-tracer-widget-stop';
-    stopBtn.textContent = '⏹️ Stop';
+    stopBtn.className = 'bug-tracer-stop-btn';
+    stopBtn.textContent = '⏹️ Stop Recording';
     stopBtn.addEventListener('click', () => this.stopRecording());
-    
-    const pauseBtn = document.createElement('button');
-    pauseBtn.className = 'bug-tracer-widget-btn bug-tracer-widget-pause';
-    pauseBtn.textContent = '⏸️ Pause';
-    pauseBtn.addEventListener('click', () => this.togglePause());
-    
-    actions.appendChild(stopBtn);
-    actions.appendChild(pauseBtn);
-    
-    // Assemble the widget
-    body.appendChild(status);
-    body.appendChild(duration);
-    body.appendChild(actions);
-    
-    content.appendChild(header);
-    content.appendChild(body);
-    
-    this.widget.appendChild(content);
+
+    controlsActions.appendChild(stopBtn);
+
+    controls.appendChild(controlsHeader);
+    controls.appendChild(controlsDuration);
+    controls.appendChild(controlsActions);
+
+    this.widget.appendChild(bubble);
+    this.widget.appendChild(controls);
 
     // Add styles
     this.addStyles();
@@ -104,7 +93,7 @@ class FloatingRecordingWidget {
 
     // Initially hidden
     this.widget.style.display = 'none';
-    
+
     // Add to page
     document.body.appendChild(this.widget);
   }
@@ -117,191 +106,215 @@ class FloatingRecordingWidget {
 
     const styles = document.createElement('style');
     styles.id = 'bug-tracer-widget-styles';
-    
+
     // Use textContent instead of innerHTML for Trusted Types compatibility
     const cssText = `
+      /* Main widget container */
       .bug-tracer-widget {
         position: fixed;
-        top: 20px;
-        right: 20px;
-        width: 280px;
-        background: #ffffff;
-        border: 1px solid #e0e0e0;
-        border-radius: 12px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        top: 24px;
+        right: 24px;
         z-index: 2147483647;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        font-size: 14px;
-        line-height: 1.4;
         user-select: none;
-        backdrop-filter: blur(10px);
-        background: rgba(255, 255, 255, 0.95);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
-      .bug-tracer-widget-content {
-        padding: 0;
-        border-radius: 12px;
-        overflow: hidden;
-      }
-
-      .bug-tracer-widget-header {
-        display: flex;
-        align-items: center;
-        padding: 12px 16px;
+      /* Compact bubble (default) */
+      .bug-tracer-bubble {
+        width: 80px;
+        height: 80px;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 12px 12px 0 0;
-      }
-
-      .bug-tracer-widget-icon {
-        font-size: 18px;
-        margin-right: 8px;
-      }
-
-      .bug-tracer-widget-title {
-        flex: 1;
-        font-weight: 600;
-        font-size: 15px;
-      }
-
-      .bug-tracer-widget-close {
-        cursor: pointer;
-        font-size: 20px;
-        font-weight: bold;
-        opacity: 0.8;
-        transition: opacity 0.2s;
-        width: 24px;
-        height: 24px;
+        border-radius: 50%;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        border-radius: 50%;
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+        cursor: move;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
-      .bug-tracer-widget-close:hover {
+      .bug-tracer-bubble:hover {
+        transform: scale(1.05);
+        box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5);
+      }
+
+      .bug-tracer-widget:hover .bug-tracer-bubble {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .bug-tracer-bubble-icon {
+        font-size: 24px;
+        margin-bottom: 2px;
+        animation: recording-pulse 2s infinite;
+      }
+
+      @keyframes recording-pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+      }
+
+      .bug-tracer-bubble-duration {
+        font-size: 11px;
+        font-weight: 600;
+        color: white;
+        font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+      }
+
+      /* Expanded controls (shown on hover) */
+      .bug-tracer-controls {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 260px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateX(10px);
+      }
+
+      .bug-tracer-widget:hover .bug-tracer-controls {
         opacity: 1;
-        background: rgba(255, 255, 255, 0.2);
+        pointer-events: all;
+        transform: translateX(0);
       }
 
-      .bug-tracer-widget-body {
-        padding: 16px;
-      }
-
-      .bug-tracer-widget-status {
+      .bug-tracer-controls-header {
         display: flex;
         align-items: center;
-        margin-bottom: 12px;
+        justify-content: space-between;
+        padding: 16px 16px 12px;
+        border-bottom: 1px solid #f0f0f0;
       }
 
-      .bug-tracer-widget-dot {
-        width: 8px;
-        height: 8px;
+      .bug-tracer-recording-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .bug-tracer-red-dot {
+        width: 10px;
+        height: 10px;
         background: #ff4444;
         border-radius: 50%;
-        margin-right: 8px;
         animation: pulse 1.5s infinite;
       }
 
       @keyframes pulse {
-        0% { opacity: 1; }
-        50% { opacity: 0.5; }
-        100% { opacity: 1; }
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
       }
 
-      .bug-tracer-widget-text {
-        color: #333;
-        font-weight: 500;
-      }
-
-      .bug-tracer-widget-duration {
-        font-size: 24px;
-        font-weight: bold;
-        color: #333;
-        text-align: center;
-        margin-bottom: 16px;
-        font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
-      }
-
-      .bug-tracer-widget-actions {
-        display: flex;
-        gap: 8px;
-      }
-
-      .bug-tracer-widget-btn {
-        flex: 1;
-        padding: 10px 16px;
+      .bug-tracer-close-btn {
+        background: transparent;
         border: none;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 500;
+        color: #999;
+        font-size: 24px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
         cursor: pointer;
         transition: all 0.2s;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
+        padding: 0;
       }
 
-      .bug-tracer-widget-stop {
+      .bug-tracer-close-btn:hover {
+        background: #f5f5f5;
+        color: #333;
+      }
+
+      .bug-tracer-controls-duration {
+        font-size: 32px;
+        font-weight: bold;
+        color: #667eea;
+        text-align: center;
+        padding: 20px 16px;
+        font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+      }
+
+      .bug-tracer-controls-actions {
+        padding: 0 16px 16px;
+      }
+
+      .bug-tracer-stop-btn {
+        width: 100%;
+        padding: 14px 20px;
         background: #ff4444;
         color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(255, 68, 68, 0.3);
       }
 
-      .bug-tracer-widget-stop:hover {
+      .bug-tracer-stop-btn:hover {
         background: #e63939;
-        transform: translateY(-1px);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(255, 68, 68, 0.4);
       }
 
-      .bug-tracer-widget-pause {
-        background: #f0f0f0;
-        color: #333;
-        border: 1px solid #ddd;
-      }
-
-      .bug-tracer-widget-pause:hover {
-        background: #e8e8e8;
-        transform: translateY(-1px);
-      }
-
-      .bug-tracer-widget-pause.paused {
-        background: #4CAF50;
-        color: white;
-        border-color: #4CAF50;
-      }
-
-      .bug-tracer-widget-pause.paused:hover {
-        background: #45a049;
+      .bug-tracer-stop-btn:active {
+        transform: translateY(0);
       }
 
       /* Responsive design */
       @media (max-width: 480px) {
         .bug-tracer-widget {
-          width: calc(100vw - 40px);
-          right: 20px;
-          left: 20px;
+          top: 16px;
+          right: 16px;
+        }
+
+        .bug-tracer-bubble {
+          width: 70px;
+          height: 70px;
+        }
+
+        .bug-tracer-bubble-icon {
+          font-size: 20px;
+        }
+
+        .bug-tracer-controls {
+          width: calc(100vw - 32px);
+          right: -16px;
         }
       }
 
       /* Dark mode support */
       @media (prefers-color-scheme: dark) {
-        .bug-tracer-widget {
-          background: rgba(30, 30, 30, 0.95);
-          border-color: #444;
+        .bug-tracer-controls {
+          background: #2d2d2d;
         }
-        
-        .bug-tracer-widget-text,
-        .bug-tracer-widget-duration {
-          color: #fff;
+
+        .bug-tracer-controls-header {
+          border-bottom-color: #404040;
         }
-        
-        .bug-tracer-widget-pause {
-          background: #444;
-          color: #fff;
-          border-color: #666;
+
+        .bug-tracer-recording-indicator {
+          color: #e0e0e0;
         }
-        
-        .bug-tracer-widget-pause:hover {
-          background: #555;
+
+        .bug-tracer-close-btn:hover {
+          background: #404040;
+          color: #e0e0e0;
+        }
+
+        .bug-tracer-controls-duration {
+          color: #667eea;
         }
       }
     `;
@@ -314,29 +327,29 @@ class FloatingRecordingWidget {
    * Make the widget draggable
    */
   makeDraggable() {
-    const header = this.widget.querySelector('.bug-tracer-widget-header');
+    const bubble = this.widget.querySelector('.bug-tracer-bubble');
     let isDragging = false;
     let startX, startY, startLeft, startTop;
 
-    header.addEventListener('mousedown', (e) => {
-      if (e.target.classList.contains('bug-tracer-widget-close')) return;
-      
+    bubble.addEventListener('mousedown', (e) => {
       isDragging = true;
       startX = e.clientX;
       startY = e.clientY;
-      startLeft = parseInt(window.getComputedStyle(this.widget).left, 10) || 0;
-      startTop = parseInt(window.getComputedStyle(this.widget).top, 10) || 0;
-      
-      this.widget.style.cursor = 'grabbing';
+
+      const rect = this.widget.getBoundingClientRect();
+      startLeft = rect.left;
+      startTop = rect.top;
+
+      bubble.style.cursor = 'grabbing';
       e.preventDefault();
     });
 
     document.addEventListener('mousemove', (e) => {
       if (!isDragging) return;
-      
+
       const deltaX = e.clientX - startX;
       const deltaY = e.clientY - startY;
-      
+
       this.widget.style.left = (startLeft + deltaX) + 'px';
       this.widget.style.top = (startTop + deltaY) + 'px';
       this.widget.style.right = 'auto';
@@ -345,7 +358,7 @@ class FloatingRecordingWidget {
     document.addEventListener('mouseup', () => {
       if (isDragging) {
         isDragging = false;
-        this.widget.style.cursor = 'default';
+        bubble.style.cursor = 'move';
       }
     });
   }
@@ -378,13 +391,22 @@ class FloatingRecordingWidget {
    */
   startDurationTimer() {
     this.stopDurationTimer();
-    
+
     this.durationInterval = setInterval(() => {
       if (this.recordingStartTime) {
         const duration = Date.now() - this.recordingStartTime;
-        const durationElement = this.widget.querySelector('.bug-tracer-widget-duration');
-        if (durationElement) {
-          durationElement.textContent = this.formatDuration(duration);
+        const formattedDuration = this.formatDuration(duration);
+
+        // Update bubble duration
+        const bubbleDuration = this.widget.querySelector('.bug-tracer-bubble-duration');
+        if (bubbleDuration) {
+          bubbleDuration.textContent = formattedDuration;
+        }
+
+        // Update controls duration
+        const controlsDuration = this.widget.querySelector('.bug-tracer-controls-duration');
+        if (controlsDuration) {
+          controlsDuration.textContent = formattedDuration;
         }
       }
     }, 1000);
@@ -418,26 +440,8 @@ class FloatingRecordingWidget {
     window.postMessage({
       type: 'BUG_TRACER_STOP_RECORDING'
     }, '*');
-    
-    this.hide();
-  }
 
-  /**
-   * Toggle pause (placeholder for future feature)
-   */
-  togglePause() {
-    const pauseBtn = this.widget.querySelector('.bug-tracer-widget-pause');
-    const isPaused = pauseBtn.classList.contains('paused');
-    
-    if (isPaused) {
-      pauseBtn.classList.remove('paused');
-      pauseBtn.innerHTML = '⏸️ Pause';
-      this.startDurationTimer();
-    } else {
-      pauseBtn.classList.add('paused');
-      pauseBtn.innerHTML = '▶️ Resume';
-      this.stopDurationTimer();
-    }
+    this.hide();
   }
 
   /**

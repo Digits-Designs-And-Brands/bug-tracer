@@ -1,6 +1,7 @@
 {
   "name": "bug-tracer",
   "version": "1.0.0",
+  "type": "module",
   "description": "Professional bug reporting with screen recording, console logs, and network monitoring. Upload to Cloudinary, AWS S3, or custom endpoints.",
   "main": "background.js",
   "scripts": {
